@@ -28,24 +28,56 @@ void MainWindow::dropEvent(QDropEvent *e)
         QString filename = url.toLocalFile();
 
         //if (QFileInfo(filename).suffix() == "bin")
-            OpenFile(filename);
+            openFile(filename);
 
         return;
     }
 }
 
-void MainWindow::OpenFile(QString filename)
+void MainWindow::openFile(QString filename)
 {
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly))
         return;
 
+    _filename = QFileInfo(filename).fileName();
     _file = file.readAll();
 
-    ReadHeader();
+    readTopology();
 }
 
-void MainWindow::ReadHeader()
+void MainWindow::readTopology()
 {
-    ui->statusBar->showMessage("Reading header file...");   
+    short x = _filename.split("_").at(0).toShort();
+    short y = _filename.split("_").at(1).toShort();
+
+    qDebug() << "Reading" << _filename;
+    qDebug() << "X:" << x;
+    qDebug() << "Y:" << y;
+
+    BinaryReader reader(_file);
+    qint8 type = reader.readByte();
+
+    qDebug() << "Map type:" << type;
+
+    switch (type)
+    {
+    case 0:
+        break;
+    case 1:
+        break;
+    case 2:
+        break;
+    case 3:
+        break;
+    case 4:
+        break;
+    case 5:
+        break;
+    default:
+        qDebug() << "[Error] Map type unkown!";
+        break;
+    }
+
+    ui->statusBar->showMessage("Reading header file...");
 }

@@ -22,8 +22,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void OpenFile(QString filename);
-    void ReadHeader();
+    void openFile(QString filename);
+    void readTopology();
 
 protected:
     void dragEnterEvent(QDragEnterEvent *e);
@@ -32,6 +32,7 @@ protected:
 private:
     Ui::MainWindow *ui;
 
+    QString _filename;
     QByteArray _file;
 };
 

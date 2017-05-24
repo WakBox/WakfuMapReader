@@ -3,84 +3,13 @@
 
 #include <QtCore>
 
-struct Row
-{
-    qint64 id;
-    qint32 offset;
-    qint32 size;
-    qint8 seed;
-};
-
-struct sEntry
-{
-    QString name;
-    QVariant value;
-};
-
-typedef QList<sEntry> Entry;
-typedef QList<Entry> DataRow;
-typedef QMap<int, Row> Rows;
-
 class BinaryReader
 {
 public:
-    BinaryReader(QByteArray file, int fileId, int fileSize = 0) : m_buffer(file), m_stream(&m_buffer, QIODevice::ReadOnly), m_fileId(fileId), m_size(fileSize)
+    BinaryReader(QByteArray file) : m_buffer(file), m_stream(&m_buffer, QIODevice::ReadOnly)
     {
         m_stream.setByteOrder(QDataStream::LittleEndian);
         m_stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-
-        if (fileSize == 0)
-        {
-            *this >> m_size;
-            m_size += 756423;
-        }
-
-        m_hoo = qint8(m_fileId ^ m_size);
-        m_col = 1;
-    }
-
-    void SetBufferPosition(qint64 pos)
-    {
-        m_stream.device()->seek(pos);
-    }
-
-    void SetHoo(qint8 hoo)
-    {
-        m_hoo = hoo;
-    }
-
-    void CalcHoo()
-    {
-        m_hoo += (qint8)(m_fileId * (m_stream.device()->pos()) + m_size);
-    }
-
-    void AddEntry(QString name, QVariant value)
-    {
-        sEntry entry;
-        entry.name = name;
-        entry.value = value;
-
-        m_entries.push_back(entry);
-    }
-
-    Entry GetCols()
-    {
-        return m_cols;
-    }
-
-    DataRow GetRows()
-    {
-        return m_rows;
-    }
-
-    void PushRow()
-    {
-        if (!m_cols.size())
-            m_cols = m_entries;
-
-        m_rows.push_back(m_entries);
-        m_entries.clear();
-        m_col = 1;
     }
 
     template <class T>
@@ -91,204 +20,36 @@ public:
     }
 
     template <typename T>
-    T Read(QString name = "")
+    T read()
     {
-        CalcHoo();
-
         T v;
         *this >> v;
-        v = v - m_hoo;
-
-        if (!name.isEmpty())
-            AddEntry(name, v);
 
         return v;
     }
 
-    float ReadFloat(QString name = "")
+    bool readBool() { return read<bool>(); }
+    qint32 readByte() { return read<qint32>(); }
+    qint16 readShort() { return read<qint16>(); }
+    qint8 readInt(){ return read<qint8>(); }
+    qint64 readLong() { return read<qint64>(); }
+
+    QString readString(quint16 length)
     {
-        CalcHoo();
-
-        float v;
-        *this >> v;
-
-        if (!name.isEmpty())
-            AddEntry(name, v);
-
-        return v;
-    }
-
-    bool ReadBool(QString name = "") { return Read<bool>(name); }
-    qint32 ReadInt(QString name = "") { return Read<qint32>(name); }
-    quint32 ReadUInt(QString name = "") { return Read<quint32>(name); }
-    //double ReadDouble(QString name = "") { return Read<double>(name); }
-    qint16 ReadShort(QString name = "") { return Read<qint16>(name); }
-    quint16 ReadUShort(QString name = "") { return Read<quint16>(name); }
-    qint8 ReadByte(QString name = ""){ return Read<qint8>(name); }
-    quint8 ReadUByte(QString name = "") { return Read<quint8>(name); }
-    qint64 ReadLong(QString name = "") { return Read<qint64>(name); }
-    quint64 ReadULong(QString name = "") { return Read<quint64>(name); }
-
-    void ReadBytes(char*& s, uint len)
-    {
-        m_stream.readBytes(s, len);
-    }
-
-    void ReadRawBytes(char* s, int len)
-    {
-        m_stream.readRawData(s, len);
-    }
-
-    QString ReadString(QString name = "")
-    {
-        qint32 len = ReadInt();
-
         QByteArray bytes;
-        bytes.resize(len);
+        bytes.resize(length);
 
-        for (qint32 i = 0; i < len; ++i)
-        {
-            qint8 v;
-            *this >> v;
-            bytes[i] = v;
-        }
+        for (quint16 i = 0; i < length; ++i)
+            bytes[i] = readByte();
 
-        QString str = QString::fromUtf8(bytes);
+        QString string = QString(bytes);
 
-        if (!name.isEmpty())
-            AddEntry(name, str);
-
-        return str;
+        return string;
     }
-
-    QStringList ReadStringArray(QString name = "")
-    {
-        QStringList stringArray, v;
-        qint32 size = ReadInt();
-
-        for (qint32 i = 0; i < size; ++i)
-        {
-            QString value = ReadString();
-            stringArray.push_back(value);
-            v.push_back(value);
-        }
-
-        if (!name.isEmpty())
-            AddEntry(name, v.join("|"));
-
-        return stringArray;
-    }
-
-    QList<qint32> ReadIntArray(QString name = "")
-    {
-        QList<qint32> intArray;
-        qint32 size = ReadInt();
-        QStringList v;
-
-        for (qint32 i = 0; i < size; ++i)
-        {
-            qint32 value = ReadInt();
-            intArray.push_back(value);
-            v.push_back(QString::number(value));
-        }
-
-        if (!name.isEmpty())
-            AddEntry(name, v.join("|"));
-
-        return intArray;
-    }
-
-    QList<float> ReadFloatArray(QString name = "")
-    {
-        QList<float> floatArray;
-        qint32 size = ReadInt();
-        QStringList v;
-
-        for (qint32 i = 0; i < size; ++i)
-        {
-            float value = ReadFloat();
-            floatArray.push_back(value);
-            v.push_back(QString::number(value));
-        }
-
-        if (!name.isEmpty())
-            AddEntry(name, v.join("|"));
-
-        return floatArray;
-    }
-
-    QList<qint8> ReadByteArray(QString name = "")
-    {
-        QList<qint8> byteArray;
-        qint32 size = ReadInt();
-        QStringList v;
-
-        for (qint32 i = 0; i < size; ++i)
-        {
-            qint8 value = ReadByte();
-            byteArray.push_back(value);
-            v.push_back(QString::number(value));
-        }
-
-        if (!name.isEmpty())
-            AddEntry(name, v.join("|"));
-
-        return byteArray;
-    }
-
-    QList<qint16> ReadShortArray(QString name = "")
-    {
-        QList<qint16> shortArray;
-        qint32 size = ReadInt();
-        QStringList v;
-
-        for (qint32 i = 0; i < size; ++i)
-        {
-            qint16 value = ReadShort();
-            shortArray.push_back(value);
-            v.push_back(QString::number(value));
-        }
-
-        if (!name.isEmpty())
-            AddEntry(name, v.join("|"));
-
-        return shortArray;
-    }
-
-    QList<qint64> ReadLongArray(QString name = "")
-    {
-        QList<qint64> longArray;
-        qint32 size = ReadInt();
-        QStringList v;
-
-        for (qint32 i = 0; i < size; ++i)
-        {
-            qint64 value = ReadLong();
-            longArray.push_back(value);
-            v.push_back(QString::number(value));
-        }
-
-        if (!name.isEmpty())
-            AddEntry(name, v.join("|"));
-
-        return longArray;
-    }
-
-    QByteArray ReadAllFromCurrentPos() { return m_stream.device()->readAll(); }
-    qint32 GetSize() { return m_size; }
 
 private:
     QByteArray m_buffer;
     QDataStream m_stream;
-
-    int m_fileId;
-    qint32 m_size;
-    qint8 m_hoo;
-
-    Entry m_entries;
-    Entry m_cols;
-    DataRow m_rows;
-    int m_col;
 };
 
 #endif // BINARYREADER_H
