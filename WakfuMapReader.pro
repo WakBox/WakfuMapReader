@@ -16,6 +16,13 @@ SOURCES += main.cpp\
         mainwindow.cpp
 
 HEADERS  += mainwindow.h \
-    BinaryReader.h
+    BinaryReader.h \
+    Topology/TopologyMap.h \
+    Topology/TopologyMapA.h \
+    Topology/TopologyMapB.h \
+    Topology/TopologyMapBi.h \
+    Topology/TopologyMapC.h \
+    Topology/TopologyMapCi.h \
+    Topology/TopologyMapD.h
 
 FORMS    += mainwindow.ui

@@ -9,7 +9,6 @@ public:
     BinaryReader(QByteArray file) : m_buffer(file), m_stream(&m_buffer, QIODevice::ReadOnly)
     {
         m_stream.setByteOrder(QDataStream::LittleEndian);
-        m_stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
     }
 
     template <class T>

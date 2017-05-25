@@ -1,6 +1,14 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "Topology/TopologyMap.h"
+#include "Topology/TopologyMapA.h"
+#include "Topology/TopologyMapB.h"
+#include "Topology/TopologyMapBi.h"
+#include "Topology/TopologyMapC.h"
+#include "Topology/TopologyMapCi.h"
+#include "Topology/TopologyMapD.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -55,29 +63,28 @@ void MainWindow::readTopology()
     qDebug() << "X:" << x;
     qDebug() << "Y:" << y;
 
-    BinaryReader reader(_file);
-    qint8 type = reader.readByte();
+    BinaryReader* reader = new BinaryReader(_file);
+    qint8 type = reader->readByte();
 
     qDebug() << "Map type:" << type;
 
+    TopologyMap* tplg = nullptr;
+
     switch (type)
     {
-    case 0:
-        break;
-    case 1:
-        break;
-    case 2:
-        break;
-    case 3:
-        break;
-    case 4:
-        break;
-    case 5:
-        break;
+    case 0: tplg = new TopologyMapA(reader); break;
+    case 1: tplg = new TopologyMapB(reader); break;
+    case 2: tplg = new TopologyMapBi(reader); break;
+    case 3: tplg = new TopologyMapC(reader); break;
+    case 4: tplg = new TopologyMapCi(reader); break;
+    case 5: tplg = new TopologyMapD(reader); break;
     default:
         qDebug() << "[Error] Map type unkown!";
-        break;
+        return;
     }
 
-    ui->statusBar->showMessage("Reading header file...");
+    tplg->read();
+    tplg->print();
+
+    delete tplg;
 }
