@@ -11,6 +11,10 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = WakfuMapReader
 TEMPLATE = app
 
+macx: {
+    LIBS += "/usr/local/lib/libquazip.dylib"
+    INCLUDEPATH += "/usr/local/include/quazip"
+}
 
 SOURCES += main.cpp\
         mainwindow.cpp
@@ -21,8 +25,9 @@ HEADERS  += mainwindow.h \
     Topology/TopologyMapA.h \
     Topology/TopologyMapB.h \
     Topology/TopologyMapBi.h \
+    Topology/TopologyMapBlockedCells.h \
     Topology/TopologyMapC.h \
     Topology/TopologyMapCi.h \
-    Topology/TopologyMapD.h
+    Topology/TopologyMapDi.h
 
 FORMS    += mainwindow.ui

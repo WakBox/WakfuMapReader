@@ -3,16 +3,16 @@
 
 #include <QtCore>
 
-#include "TopologyMap.h"
+#include "TopologyMapBlockedCells.h"
 
-class TopologyMapB : public TopologyMap
+class TopologyMapB : public TopologyMapBlockedCells
 {
 public:
-    TopologyMapB(BinaryReader* reader) : TopologyMap(reader) { _type = 1; }
+    TopologyMapB(BinaryReader* reader) : TopologyMapBlockedCells(reader) { _type = 1; }
 
     virtual void read()
     {
-        TopologyMap::read();
+        TopologyMapBlockedCells::read();
 
         for (int i = 0; i < 324; ++i)
         {
@@ -24,7 +24,7 @@ public:
 
     virtual void print()
     {
-        TopologyMap::print();
+        TopologyMapBlockedCells::print();
 
         qDebug() << "m_cost[]:" << m_cost;
         qDebug() << "m_murfin[]:" << m_murfin;

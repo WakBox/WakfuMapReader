@@ -3,18 +3,18 @@
 
 #include <QtCore>
 
-#include "TopologyMap.h"
+#include "TopologyMapBlockedCells.h"
 
-class TopologyMapCi : public TopologyMap
+class TopologyMapCi : public TopologyMapBlockedCells
 {
 public:
-    TopologyMapCi(BinaryReader* reader) : TopologyMap(reader) { _type = 4; }
+    TopologyMapCi(BinaryReader* reader) : TopologyMapBlockedCells(reader) { _type = 4; }
 
     virtual void read()
     {
-        TopologyMap::read();
+        TopologyMapBlockedCells::read();
 
-        int indexSize = _reader->readByte();
+        int indexSize = _reader->readByte() & 0xFF;
 
         for (int i = 0; i < indexSize; ++i)
         {
@@ -26,14 +26,14 @@ public:
             m_movLos.push_back(_reader->readByte());
         }
 
-        int cellSize = _reader->readByte();
+        int cellSize = _reader->readByte() & 0xFF;
         for (int i = 0; i < cellSize; ++i)
             m_cells.push_back(_reader->readLong());
     }
 
     virtual void print()
     {
-        TopologyMap::print();
+        TopologyMapBlockedCells::print();
 
         qDebug() << "m_cost[]:" << m_cost;
         qDebug() << "m_murfin[]:" << m_murfin;

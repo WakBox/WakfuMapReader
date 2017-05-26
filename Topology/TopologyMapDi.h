@@ -3,18 +3,18 @@
 
 #include <QtCore>
 
-#include "TopologyMap.h"
+#include "TopologyMapBlockedCells.h"
 
-class TopologyMapD : public TopologyMap
+class TopologyMapD : public TopologyMapBlockedCells
 {
 public:
-    TopologyMapD(BinaryReader* reader) : TopologyMap(reader) { _type = 5; }
+    TopologyMapD(BinaryReader* reader) : TopologyMapBlockedCells(reader) { _type = 5; }
 
     virtual void read()
     {
-        TopologyMap::read();
+        TopologyMapBlockedCells::read();
 
-        int indexSize = _reader->readByte();
+        int indexSize = _reader->readByte() & 0xFF;
 
         for (int i = 0; i < indexSize; ++i)
         {
@@ -26,20 +26,20 @@ public:
             m_movLos.push_back(_reader->readByte());
         }
 
-        int cellCount = _reader->readByte();
+        int cellCount = _reader->readByte() & 0xFF;
         for (int i = 0; i < cellCount; ++i)
             m_cells.push_back(_reader->readLong());
 
-        int remainsCount = _reader->readShort();
+        int remainsCount = _reader->readShort() & 0xFFFF;
         for (int i = 0; i < remainsCount; ++i)
             m_cellsWithMultiZ.push_back(_reader->readInt());
     }
 
     virtual void print()
     {
-        TopologyMap::print();
+        TopologyMapBlockedCells::print();
 
-        qDebug() << "m_cost[]:" << TopologyMap::printVector(m_cost);
+        qDebug() << "m_cost[]:" << m_cost;
         qDebug() << "m_murfin[]:" << m_murfin;
         qDebug() << "m_property[]:" << m_property;
         qDebug() << "m_zs[]:" << m_zs;

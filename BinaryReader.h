@@ -11,6 +11,8 @@ public:
         m_stream.setByteOrder(QDataStream::LittleEndian);
     }
 
+    int remaning() { return m_stream.device()->bytesAvailable(); }
+
     template <class T>
     BinaryReader& operator>>(T& value)
     {

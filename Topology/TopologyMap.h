@@ -29,18 +29,13 @@ public:
         qDebug() << "= X:"<<m_x<<"| Y:"<<m_y<<"| Z:"<<m_z;
         qDebug() << "=================";
         qDebug() << "";
-        qDebug() << " = Map Topology Data:";
+        qDebug() << " = Map Topology Data (remaining buffer:" << _reader->remaning() << ")";
+        qDebug() << "";
     }
 
-    template <typename T>
-    static QString printVector(QVector<T>& vector)
+    bool isInMap(int x, int y)
     {
-        QString print;
-
-        for (int i = 0; i < vector.size(); ++i)
-            print += QString::number(vector.at(i));
-
-        return print;
+        return x >= m_x && x < m_x + 18 && y >= m_y && y < m_y + 18;
     }
 
 protected:
