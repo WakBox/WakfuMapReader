@@ -28,6 +28,11 @@ public:
         qDebug() << "m_property:" << m_property;
     }
 
+    virtual qint8 isCellBlocked(int /*x*/, int /*y*/)
+    {
+        return m_cost == -1;
+    }
+
 private:
     qint8 m_cost;
     qint8 m_murfin;

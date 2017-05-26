@@ -14,7 +14,7 @@ public:
     {
         TopologyMap::read();
 
-        m_blockedCells.reserve(324 + 7 >> 3);
+        m_blockedCells.reserve((324 + 7) >> 3);
 
         for (int i = 0; i < m_blockedCells.capacity(); ++i)
             m_blockedCells.push_back(_reader->readByte());
@@ -27,10 +27,14 @@ public:
         qDebug() << "m_blockedCells[]:" << m_blockedCells;
     }
 
-    virtual bool isCellBlocked(int x, int y)
+    virtual qint8 isCellBlocked(int x, int y)
     {
         int index = (y - m_y) * 18 + x - m_x;
         int unitPosition = index >> 3;
+
+        if (unitPosition < 0 || unitPosition >= m_blockedCells.size())
+            return -1;
+
         int bitPosition = 7 - (index - (unitPosition << 3));
 
         return (m_blockedCells[unitPosition] & 1 << bitPosition) != 0;

@@ -33,6 +33,8 @@ public:
         qDebug() << "";
     }
 
+    virtual qint8 isCellBlocked(int x, int y) = 0;
+
     bool isInMap(int x, int y)
     {
         return x >= m_x && x < m_x + 18 && y >= m_y && y < m_y + 18;

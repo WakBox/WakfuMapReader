@@ -1,4 +1,4 @@
-#include <QBitmap>
+#include <QImage>
 
 #include "JlCompress.h"
 
@@ -56,7 +56,7 @@ void MainWindow::openFile(QString filename)
     _file = file.readAll();*/
 
     qDebug() << "Reading" << filename;
-    QBitmap bitmap(864, 5184);
+    QImage map(864, 1500, QImage::Format_RGB32);
 
     QuaZip archive(filename);
     archive.open(QuaZip::mdUnzip);
@@ -114,34 +114,20 @@ void MainWindow::openFile(QString filename)
                 int offsetx = (mapx * 18) + x;
                 int offsety = (mapy * 18) + y;
 
-                /*bgCCellPathData bgc = GIRCellDataBuilder.BuildDataForCell(offsetx, offsety, parser);
+                qint8 res = tplg->isCellBlocked(offsetx, offsety);
 
-                if (bgc != null)
+                if (res == 1)
                 {
-                    try
-                    {
-                        if (map.isBlocking(offsetx, offsety))
-                        {
-                            bitmap.SetPixel(offsetx + 431, offsety + 2592, Color.DarkGreen);
-                        }
-                        else
-                        {
-                            bitmap.SetPixel(offsetx + 431, offsety + 2592, Color.LightGreen);
-                        }
-                        //Console.WriteLine("[{0},{1},{2},{3}]({4})", offsetx, offsety, data.z, (map.isBlocking(offsetx, offsety) ? 1 : 0), instanceID);
-
-                    }
-                    catch (Exception)
-                    {
-                        bitmap.SetPixel(offsetx + 431, offsety + 2592, Color.White);
-                        //Console.WriteLine("EMPTY CELL AT: {0},{1},{2}", offsetx, offsety, 0);
-                    }
+                    map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::darkGreen);
                 }
-                else
+                else if (res == 0)
                 {
-                    bitmap.SetPixel(offsetx + 431, offsety + 2592, Color.Red);
-                    //Console.WriteLine("EMPTY CELL AT: {0},{1},{2}", offsetx, offsety, 0);
-                }*/
+                    map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::green);
+                }
+                else if (res == -1)
+                {
+                    map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::gray);
+                }
             }
         }
 
@@ -149,7 +135,16 @@ void MainWindow::openFile(QString filename)
     }
 
     archive.close();
-    bitmap.save(qApp->applicationDirPath() + "/" + filename.split("/").last().remove(".jar") + ".png", "PNG");
+
+    QDir dir(QCoreApplication::applicationDirPath());
+
+    #ifdef Q_OS_MAC
+        dir.cdUp();
+        dir.cdUp();
+        dir.cdUp();
+    #endif
+
+    map.save(dir.absolutePath() + "/" + filename.split("/").last().remove(".jar") + ".png", "PNG");
 
     //readTopology();
 }
