@@ -70,6 +70,10 @@ void MainWindow::openFile(QString filename)
         if (filePath.contains("META") || filePath.contains("coord"))
             continue;
 
+        // tmp
+        if (filePath != "0_0")
+            continue;
+
         file.open(QIODevice::ReadOnly);
         QByteArray ba = file.readAll();
         file.close();
@@ -119,15 +123,20 @@ void MainWindow::openFile(QString filename)
                 if (res == 1)
                 {
                     map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::darkGreen);
+                    qDebug() << "[" << offsetx << "," << offsety << ",1]";
                 }
                 else if (res == 0)
                 {
                     map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::green);
+                    qDebug() << "[" << offsetx << "," << offsety << ",0]";
                 }
                 else if (res == -1)
                 {
                     map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::gray);
+                    qDebug() << "EMPTY CELL = ERROR";
                 }
+
+                return;
             }
         }
 

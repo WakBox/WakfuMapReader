@@ -16,6 +16,11 @@ macx: {
     INCLUDEPATH += "/usr/local/include/quazip"
 }
 
+win32 {
+    LIBS += -L"C:/Quazip/lib" -lquazip
+    INCLUDEPATH += C:/Quazip/include
+}
+
 SOURCES += main.cpp\
         mainwindow.cpp
 
