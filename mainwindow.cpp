@@ -48,13 +48,6 @@ void MainWindow::dropEvent(QDropEvent *e)
 
 void MainWindow::openFile(QString filename)
 {
-    /*QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly))
-        return;
-
-    _filename = QFileInfo(filename).fileName();
-    _file = file.readAll();*/
-
     qDebug() << "Reading" << filename;
     QImage map(864, 1500, QImage::Format_RGB32);
 
@@ -90,7 +83,13 @@ void MainWindow::openFile(QString filename)
         BinaryReader* reader = new BinaryReader(ba);
         qint8 type = reader->readByte();
 
+        qDebug() << "X:" << reader->readShort();
+        qDebug() << "Y:" << reader->readShort();
+        qDebug() << "Z:" << reader->readShort();
+
         qDebug() << "Map type:" << type;
+
+        return;
 
         TopologyMap* tplg = nullptr;
 
@@ -108,7 +107,7 @@ void MainWindow::openFile(QString filename)
         }
 
         tplg->read();
-        //tplg->print();
+        tplg->print();
 
         // Generate map
         for (int y = 0; y < 18; y++)
@@ -154,41 +153,4 @@ void MainWindow::openFile(QString filename)
     #endif
 
     map.save(dir.absolutePath() + "/" + filename.split("/").last().remove(".jar") + ".png", "PNG");
-
-    //readTopology();
-}
-
-void MainWindow::readTopology()
-{
-    short x = _filename.split("_").at(0).toShort();
-    short y = _filename.split("_").at(1).toShort();
-
-    qDebug() << "Reading" << _filename;
-    qDebug() << "X:" << x;
-    qDebug() << "Y:" << y;
-
-    BinaryReader* reader = new BinaryReader(_file);
-    qint8 type = reader->readByte();
-
-    qDebug() << "Map type:" << type;
-
-    TopologyMap* tplg = nullptr;
-
-    switch (type)
-    {
-    case 0: tplg = new TopologyMapA(reader); break;
-    case 1: tplg = new TopologyMapB(reader); break;
-    case 2: tplg = new TopologyMapBi(reader); break;
-    case 3: tplg = new TopologyMapC(reader); break;
-    case 4: tplg = new TopologyMapCi(reader); break;
-    case 5: tplg = new TopologyMapD(reader); break;
-    default:
-        qDebug() << "[Error] Map type unkown!";
-        return;
-    }
-
-    tplg->read();
-    tplg->print();
-
-    delete tplg;
 }

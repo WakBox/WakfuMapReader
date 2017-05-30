@@ -29,10 +29,10 @@ public:
 
     virtual qint8 isCellBlocked(int x, int y)
     {
-        int index = ((y - m_y) * 18 + x) - m_x;
+        int index = (y - m_y) * 18 + x - m_x;
         int unitPosition = index >> 3;
 
-        if (unitPosition >= m_blockedCells.size())
+        if (unitPosition < m_blockedCells.size())
             return -1;
 
         int bitPosition = 7 - (index - (unitPosition << 3));

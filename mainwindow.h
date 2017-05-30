@@ -23,7 +23,6 @@ public:
     ~MainWindow();
 
     void openFile(QString filename);
-    void readTopology();
 
 protected:
     void dragEnterEvent(QDragEnterEvent *e);

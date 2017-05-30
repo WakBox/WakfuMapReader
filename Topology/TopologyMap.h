@@ -46,7 +46,7 @@ protected:
 
     int m_x;
     int m_y;
-    short m_z;
+    qint16 m_z;
 
 };
 
