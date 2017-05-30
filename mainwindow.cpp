@@ -5,21 +5,20 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "Topology/TopologyMap.h"
-#include "Topology/TopologyMapA.h"
-#include "Topology/TopologyMapB.h"
-#include "Topology/TopologyMapBi.h"
-#include "Topology/TopologyMapC.h"
-#include "Topology/TopologyMapCi.h"
-#include "Topology/TopologyMapDi.h"
+#include "TopologyReader.h"
+#include "DialogTopology.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     setAcceptDrops(true);
-
     ui->setupUi(this);
+
+    ui->maps->hide();
+    ui->progressBar->hide();
+
+    connect(ui->maps, SIGNAL(currentIndexChanged(QString)), this, SLOT(onSelectMap(QString)));
 }
 
 MainWindow::~MainWindow()
@@ -37,111 +36,72 @@ void MainWindow::dropEvent(QDropEvent *e)
 {
     foreach (const QUrl &url, e->mimeData()->urls())
     {
-        QString filename = url.toLocalFile();
-
-        if (QFileInfo(filename).suffix() == "jar")
-            openFile(filename);
-
+        openWakfuFolder(url.toLocalFile());
         return;
     }
 }
 
-void MainWindow::openFile(QString filename)
+void MainWindow::openWakfuFolder(QString path)
 {
-    qDebug() << "Reading" << filename;
-    int width = 2000;
-    int height = 2000;
-
-    QImage map(width, height, QImage::Format_RGB32);
-
-    QuaZip archive(filename);
-    archive.open(QuaZip::mdUnzip);
-
-    QuaZipFile file(&archive);
-
-    for (bool f = archive.goToFirstFile(); f; f = archive.goToNextFile())
-    {
-        QString filePath = archive.getCurrentFileName();
-
-        if (filePath.contains("META") || filePath.contains("coord"))
-            continue;
-
-        file.open(QIODevice::ReadOnly);
-        QByteArray ba = file.readAll();
-        file.close();
-
-        qDebug() << "==========";
-        qDebug() << "File :" << filePath << " Size : " << ba.size();
-
-        short mapx = filePath.split("_").at(0).toShort();
-        short mapy = filePath.split("_").at(1).toShort();
-
-        qDebug() << "X:" << mapx;
-        qDebug() << "Y:" << mapy;
-
-        BinaryReader* reader = new BinaryReader(ba);
-        qint8 type = reader->readByte();
-
-        qDebug() << "Map type:" << type;
-
-        TopologyMap* tplg = nullptr;
-
-        switch (type)
-        {
-        case 0: tplg = new TopologyMapA(reader); break;
-        case 1: tplg = new TopologyMapB(reader); break;
-        case 2: tplg = new TopologyMapBi(reader); break;
-        case 3: tplg = new TopologyMapC(reader); break;
-        case 4: tplg = new TopologyMapCi(reader); break;
-        case 5: tplg = new TopologyMapD(reader); break;
-        default:
-            qDebug() << "[Error] Map type unkown!";
-            return;
-        }
-
-        tplg->read();
-        tplg->print();
-
-        // Generate map
-        for (int y = 0; y < 18; y++)
-        {
-            for (int x = 0; x < 18; x++)
-            {
-                int offsetx = (mapx * 18) + x;
-                int offsety = (mapy * 18) + y;
-
-                qint8 res = tplg->isCellBlocked(offsetx, offsety);
-
-                if (res == 1)
-                {
-                    map.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::darkGreen);
-                    qDebug() << "[" << offsetx << "," << offsety << ",1]";
-                }
-                else if (res == 0)
-                {
-                    map.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::green);
-                    qDebug() << "[" << offsetx << "," << offsety << ",0]";
-                }
-                else if (res == -1)
-                {
-                    map.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::gray);
-                    qDebug() << "EMPTY CELL";
-                }
-            }
-        }
-
-        delete tplg;
-    }
-
-    archive.close();
-
-    QDir dir(QCoreApplication::applicationDirPath());
+    _wakfuPath = path;
 
     #ifdef Q_OS_MAC
-        dir.cdUp();
-        dir.cdUp();
-        dir.cdUp();
+    _wakfuPath += "/Contents/Data/Wakfu.app/Contents/Resources/contents/maps/";
     #endif
 
-    map.save(dir.absolutePath() + "/" + filename.split("/").last().remove(".jar") + ".png", "PNG");
+    QFileInfo fi(_wakfuPath);
+
+    if (!fi.isDir())
+    {
+        ui->statusBar->showMessage("Error while reading Wakfu folder.");
+        return;
+    }
+
+    QDir tplg(_wakfuPath + "tplg");
+    tplg.setFilter(QDir::Files);
+    tplg.setSorting(QDir::NoSort);
+
+    QStringList list = tplg.entryList();
+
+    QCollator collator;
+    collator.setNumericMode(true);
+
+    std::sort(list.begin(), list.end(), [&collator](const QString &file1, const QString &file2)
+    {
+        return collator.compare(file1, file2) < 0;
+    });
+
+    list.prepend("Please select a map to analyze");
+    ui->maps->addItems(list);
+
+    ui->label->hide();
+    ui->maps->show();
+}
+
+void MainWindow::onSelectMap(QString map)
+{
+    if (!map.contains(".jar"))
+        return;
+
+    ui->progressBar->show();
+    ui->progressBar->setValue(0);
+
+    DialogTopology* dialogTopology = new DialogTopology(this);
+    dialogTopology->show();
+
+    TopologyReader* tplgThread = new TopologyReader(this);
+    connect(tplgThread, SIGNAL(updateProgressBar(int,int)), this, SLOT(updateProgressBar(int,int)));
+    connect(tplgThread, SIGNAL(updateTopology(QImage)), dialogTopology, SLOT(updateTopology(QImage)));
+    connect(tplgThread, SIGNAL(finished()), tplgThread, SLOT(deleteLater()));
+
+    tplgThread->setPath(_wakfuPath + "tplg/" + map);
+    tplgThread->start();
+}
+
+void MainWindow::updateProgressBar(int max, int value)
+{
+    if (ui->progressBar->maximum() != max)
+        ui->progressBar->setMaximum(max);
+
+    ui->progressBar->setValue(ui->progressBar->value() + value);
 }

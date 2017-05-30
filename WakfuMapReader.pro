@@ -22,7 +22,8 @@ win32 {
 }
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    DialogTopology.cpp
 
 HEADERS  += mainwindow.h \
     BinaryReader.h \
@@ -33,6 +34,9 @@ HEADERS  += mainwindow.h \
     Topology/TopologyMapBlockedCells.h \
     Topology/TopologyMapC.h \
     Topology/TopologyMapCi.h \
-    Topology/TopologyMapDi.h
+    Topology/TopologyMapDi.h \
+    TopologyReader.h \
+    DialogTopology.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    DialogTopology.ui

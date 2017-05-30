@@ -22,16 +22,23 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void openFile(QString filename);
+    void openWakfuFolder(QString path);
+
+public slots:
+    void onSelectMap(QString map);
+    void updateProgressBar(int max, int value);
+
+signals:
+    void topologyProcessed();
 
 protected:
     void dragEnterEvent(QDragEnterEvent *e);
     void dropEvent(QDropEvent *e);
-    
+
 private:
     Ui::MainWindow *ui;
 
-    QString _filename;
+    QString _wakfuPath;
     QByteArray _file;
 };
 
