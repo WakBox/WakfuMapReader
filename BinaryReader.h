@@ -30,9 +30,9 @@ public:
     }
 
     bool readBool() { return read<bool>(); }
-    qint32 readByte() { return read<qint32>(); }
+    qint8 readByte() { return read<qint8>(); }
     qint16 readShort() { return read<qint16>(); }
-    qint8 readInt(){ return read<qint8>(); }
+    qint32 readInt(){ return read<qint32>(); }
     qint64 readLong() { return read<qint64>(); }
 
     QString readString(quint16 length)

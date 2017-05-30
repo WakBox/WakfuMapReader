@@ -49,7 +49,10 @@ void MainWindow::dropEvent(QDropEvent *e)
 void MainWindow::openFile(QString filename)
 {
     qDebug() << "Reading" << filename;
-    QImage map(864, 1500, QImage::Format_RGB32);
+    int width = 2000;
+    int height = 2000;
+
+    QImage map(width, height, QImage::Format_RGB32);
 
     QuaZip archive(filename);
     archive.open(QuaZip::mdUnzip);
@@ -61,10 +64,6 @@ void MainWindow::openFile(QString filename)
         QString filePath = archive.getCurrentFileName();
 
         if (filePath.contains("META") || filePath.contains("coord"))
-            continue;
-
-        // tmp
-        if (filePath != "0_0")
             continue;
 
         file.open(QIODevice::ReadOnly);
@@ -83,13 +82,7 @@ void MainWindow::openFile(QString filename)
         BinaryReader* reader = new BinaryReader(ba);
         qint8 type = reader->readByte();
 
-        qDebug() << "X:" << reader->readShort();
-        qDebug() << "Y:" << reader->readShort();
-        qDebug() << "Z:" << reader->readShort();
-
         qDebug() << "Map type:" << type;
-
-        return;
 
         TopologyMap* tplg = nullptr;
 
@@ -121,21 +114,19 @@ void MainWindow::openFile(QString filename)
 
                 if (res == 1)
                 {
-                    map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::darkGreen);
+                    map.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::darkGreen);
                     qDebug() << "[" << offsetx << "," << offsety << ",1]";
                 }
                 else if (res == 0)
                 {
-                    map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::green);
+                    map.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::green);
                     qDebug() << "[" << offsetx << "," << offsety << ",0]";
                 }
                 else if (res == -1)
                 {
-                    map.setPixelColor(offsetx + 431, offsety + 750, Qt::GlobalColor::gray);
-                    qDebug() << "EMPTY CELL = ERROR";
+                    map.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::gray);
+                    qDebug() << "EMPTY CELL";
                 }
-
-                return;
             }
         }
 
