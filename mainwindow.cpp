@@ -6,7 +6,6 @@
 #include "ui_mainwindow.h"
 
 #include "TopologyReader.h"
-#include "DialogTopology.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -76,6 +75,9 @@ void MainWindow::openWakfuFolder(QString path)
 
     ui->label->hide();
     ui->maps->show();
+
+    // Parse elements.lib
+
 }
 
 void MainWindow::onSelectMap(QString map)
@@ -90,7 +92,8 @@ void MainWindow::onSelectMap(QString map)
     dialogTopology->show();
 
     TopologyReader* tplgThread = new TopologyReader(this);
-    connect(tplgThread, SIGNAL(updateProgressBar(int,int)), this, SLOT(updateProgressBar(int,int)));
+    connect(tplgThread, SIGNAL(resetProgressBar(int)), this, SLOT(resetProgressBar(int)));
+    connect(tplgThread, SIGNAL(updateProgressBar()), this, SLOT(updateProgressBar()));
     connect(tplgThread, SIGNAL(updateTopology(QImage)), dialogTopology, SLOT(updateTopology(QImage)));
     connect(tplgThread, SIGNAL(finished()), tplgThread, SLOT(deleteLater()));
 
@@ -98,10 +101,13 @@ void MainWindow::onSelectMap(QString map)
     tplgThread->start();
 }
 
-void MainWindow::updateProgressBar(int max, int value)
+void MainWindow::resetProgressBar(int max)
 {
-    if (ui->progressBar->maximum() != max)
-        ui->progressBar->setMaximum(max);
+    ui->progressBar->setMaximum(max);
+    ui->progressBar->setValue(0);
+}
 
-    ui->progressBar->setValue(ui->progressBar->value() + value);
+void MainWindow::updateProgressBar()
+{
+    ui->progressBar->setValue(ui->progressBar->value() + 1);
 }

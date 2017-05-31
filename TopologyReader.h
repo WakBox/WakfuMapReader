@@ -22,6 +22,7 @@ class TopologyReader : public QThread
 
 public:
     TopologyReader(QObject* parent = 0) : QThread(parent) {}
+    ~TopologyReader() {}
     void setPath(QString path) { _path = path; }
 
 protected:
@@ -34,7 +35,8 @@ protected:
 
         QuaZip archive(_path);
         archive.open(QuaZip::mdUnzip);
-        int entries = archive.getEntriesCount();
+
+        resetProgressBar(archive.getEntriesCount() - 3);
 
         QuaZipFile file(&archive);
 
@@ -49,19 +51,19 @@ protected:
             QByteArray ba = file.readAll();
             file.close();
 
-            qDebug() << "==========";
-            qDebug() << "File :" << filePath << " Size : " << ba.size();
+            //qDebug() << "==========";
+            //qDebug() << "File :" << filePath << " Size : " << ba.size();
 
             short mapx = filePath.split("_").at(0).toShort();
             short mapy = filePath.split("_").at(1).toShort();
 
-            qDebug() << "X:" << mapx;
-            qDebug() << "Y:" << mapy;
+            //qDebug() << "X:" << mapx;
+            //qDebug() << "Y:" << mapy;
 
             BinaryReader* reader = new BinaryReader(ba);
             qint8 type = reader->readByte();
 
-            qDebug() << "Map type:" << type;
+            //qDebug() << "Map type:" << type;
 
             TopologyMap* tplg = nullptr;
 
@@ -79,7 +81,7 @@ protected:
             }
 
             tplg->read();
-            tplg->print();
+            //tplg->print();
 
             // Generate map
             for (int y = 0; y < 18; y++)
@@ -94,26 +96,25 @@ protected:
                     if (res == 1)
                     {
                         topology.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::darkGreen);
-                        qDebug() << "[" << offsetx << "," << offsety << ",1]";
+                        //qDebug() << "[" << offsetx << "," << offsety << ",1]";
                     }
                     else if (res == 0)
                     {
                         topology.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::green);
-                        qDebug() << "[" << offsetx << "," << offsety << ",0]";
+                        //qDebug() << "[" << offsetx << "," << offsety << ",0]";
                     }
                     else if (res == -1)
                     {
                         topology.setPixelColor(offsetx + (width/2), offsety + (height/2), Qt::GlobalColor::gray);
-                        qDebug() << "EMPTY CELL";
+                        //qDebug() << "EMPTY CELL";
                     }
                 }
-
-                updateTopology(topology);
             }
 
             delete tplg;
 
-            updateProgressBar(entries - 1, 1);
+            updateProgressBar();
+            updateTopology(topology);
         }
 
         archive.close();
@@ -127,14 +128,13 @@ protected:
         #endif
 
         topology.save(dir.absolutePath() + "/" + _path.split("/").last().remove(".jar") + ".png", "PNG");
-
-        emit done();
     }
 
 signals:
-    void updateProgressBar(int max, int value);
+    void resetTopology();
+    void resetProgressBar(int max);
+    void updateProgressBar();
     void updateTopology(QImage topology);
-    void done();
 
 private:
     QString _path;

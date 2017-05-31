@@ -6,6 +6,8 @@ DialogTopology::DialogTopology(QWidget *parent) :
     ui(new Ui::DialogTopology)
 {
     ui->setupUi(this);
+
+    connect(ui->close, SIGNAL(clicked(bool)), this, SLOT(accept()));
 }
 
 DialogTopology::~DialogTopology()

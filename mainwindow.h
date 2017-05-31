@@ -9,6 +9,7 @@
 #include <QDebug>
 
 #include "BinaryReader.h"
+#include "DialogTopology.h"
 
 namespace Ui {
 class MainWindow;
@@ -26,7 +27,8 @@ public:
 
 public slots:
     void onSelectMap(QString map);
-    void updateProgressBar(int max, int value);
+    void resetProgressBar(int max);
+    void updateProgressBar();
 
 signals:
     void topologyProcessed();
