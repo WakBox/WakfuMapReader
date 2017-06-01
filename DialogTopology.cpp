@@ -17,5 +17,6 @@ DialogTopology::~DialogTopology()
 
 void DialogTopology::updateTopology(QImage topology)
 {
-    ui->image->setPixmap(QPixmap::fromImage(topology));
+    ui->topology->setPixmap(QPixmap::fromImage(topology));
+    show();
 }

@@ -32,6 +32,7 @@ protected:
         int height = 2000;
 
         QImage topology(width, height, QImage::Format_RGB32);
+        QByteArray coord;
 
         QuaZip archive(_path);
         archive.open(QuaZip::mdUnzip);
@@ -44,12 +45,18 @@ protected:
         {
             QString filePath = archive.getCurrentFileName();
 
-            if (filePath.contains("META") || filePath.contains("coord"))
+            if (filePath.contains("META"))
                 continue;
 
             file.open(QIODevice::ReadOnly);
             QByteArray ba = file.readAll();
             file.close();
+
+            if (filePath.contains("coord"))
+            {
+                coord = ba;
+                continue;
+            }
 
             //qDebug() << "==========";
             //qDebug() << "File :" << filePath << " Size : " << ba.size();
@@ -114,7 +121,6 @@ protected:
             delete tplg;
 
             updateProgressBar();
-            updateTopology(topology);
         }
 
         archive.close();
@@ -128,6 +134,20 @@ protected:
         #endif
 
         topology.save(dir.absolutePath() + "/" + _path.split("/").last().remove(".jar") + ".png", "PNG");
+
+        // Partition coords
+        if (coord.size())
+        {
+            BinaryReader* c = new BinaryReader(coord, QDataStream::BigEndian);
+
+            QVector<int> coords;
+            coords.reserve(coord.size() / 4);
+
+            for (int i = 0; i < coords.capacity(); ++i)
+                qDebug() << c->readInt();
+        }
+
+        updateTopology(topology);
     }
 
 signals:

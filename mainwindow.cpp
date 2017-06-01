@@ -89,7 +89,6 @@ void MainWindow::onSelectMap(QString map)
     ui->progressBar->setValue(0);
 
     DialogTopology* dialogTopology = new DialogTopology(this);
-    dialogTopology->show();
 
     TopologyReader* tplgThread = new TopologyReader(this);
     connect(tplgThread, SIGNAL(resetProgressBar(int)), this, SLOT(resetProgressBar(int)));

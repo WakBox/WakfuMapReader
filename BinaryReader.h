@@ -6,9 +6,9 @@
 class BinaryReader
 {
 public:
-    BinaryReader(QByteArray file) : m_buffer(file), m_stream(&m_buffer, QIODevice::ReadOnly)
+    BinaryReader(QByteArray file, QDataStream::ByteOrder order = QDataStream::LittleEndian) : m_buffer(file), m_stream(&m_buffer, QIODevice::ReadOnly)
     {
-        m_stream.setByteOrder(QDataStream::LittleEndian);
+        m_stream.setByteOrder(order);
     }
 
     int remaning() { return m_stream.device()->bytesAvailable(); }
