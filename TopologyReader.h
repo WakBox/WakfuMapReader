@@ -144,7 +144,11 @@ protected:
             coords.reserve(coord.size() / 4);
 
             for (int i = 0; i < coords.capacity(); ++i)
-                qDebug() << c->readInt();
+            {
+                qint32 twoInts = c->readInt();
+                qDebug() << "["<<i<<"] X:" << qint16(twoInts >> 16);
+                qDebug() << "["<<i<<"] Y:" << qint16(twoInts & 0xFFFF);
+            }
         }
 
         updateTopology(topology);
