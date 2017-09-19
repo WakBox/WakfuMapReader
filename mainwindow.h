@@ -23,6 +23,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void openJarFile(QString path);
     void openWakfuFolder(QString path);
 
 public slots:

@@ -16,6 +16,30 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <widget class="QComboBox" name="comboBox">
+      <item>
+       <property name="text">
+        <string>env</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>gfx</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>light</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>tplg</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item>
      <widget class="QLabel" name="label">
       <property name="text">
        <string>Drop Wakfu's installation folder here.</string>

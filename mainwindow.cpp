@@ -35,8 +35,153 @@ void MainWindow::dropEvent(QDropEvent *e)
 {
     foreach (const QUrl &url, e->mimeData()->urls())
     {
-        openWakfuFolder(url.toLocalFile());
+        QString filename = url.toLocalFile();
+
+        if (QFileInfo(filename).suffix() == "jar")
+            openJarFile(filename);
+        else
+            openWakfuFolder(filename);
+
         return;
+    }
+}
+
+void MainWindow::openJarFile(QString path)
+{
+    ui->progressBar->show();
+    ui->progressBar->setValue(0);
+
+    if (ui->comboBox->currentText() == "env")
+    {
+        QuaZip archive(path);
+        archive.open(QuaZip::mdUnzip);
+
+        QuaZipFile file(&archive);
+
+        for (bool f = archive.goToFirstFile(); f; f = archive.goToNextFile())
+        {
+            QString filePath = archive.getCurrentFileName();
+
+            if (filePath.contains("META"))
+                continue;
+
+            file.open(QIODevice::ReadOnly);
+            QByteArray ba = file.readAll();
+            file.close();
+
+            if (filePath.contains("data"))
+            {
+                //coord = ba;
+                continue;
+            }
+
+            short mapx = filePath.split("_").at(0).toShort();
+            short mapy = filePath.split("_").at(1).toShort();
+
+            qDebug() << "X:" << mapx;
+            qDebug() << "Y:" << mapy;
+
+            BinaryReader* r = new BinaryReader(ba);
+            qint8 type = r->readByte();
+
+            qDebug() << "Map type:" << type;
+
+            qint16 m_x = r->readShort();
+            qint16 m_y = r->readShort();
+
+            // loadParticleData
+            qint8 count = r->readByte();
+            for (qint8 a = 0; a < count; ++a)
+            {
+                qint8 m_p_x = r->readByte();
+                qint8 m_p_y = r->readByte();
+                qint16 m_p_z = r->readShort();
+
+                qint32 m_systemId = r->readInt();
+                qint8 m_level = r->readByte();
+                qint8 m_offsetX = r->readByte();
+                qint8 m_offsetY = r->readByte();
+                qint8 m_offsetZ = r->readByte();
+                qint8 m_lod = r->readByte();
+            }
+
+            // loadSoundData
+            count = r->readByte();
+            for (qint8 a = 0; a < count; ++a)
+            {
+                qint8 m_s_x = r->readByte();
+                qint8 m_s_y = r->readByte();
+                qint16 m_s_z = r->readShort();
+
+                qint32 m_soundId = r->readInt();
+            }
+
+            // loadAmbianceData
+            count = r->readByte();
+            QVector<qint32> ambiancesId;
+
+            for (qint8 a = 0; a < count; ++a)
+                ambiancesId.push_back(r->readInt());
+
+            qint8 size = r->readByte();
+            for (qint8 a = 0; a < size; ++a)
+                r->readByte();
+
+            // loadInteractiveElements
+            count = r->readByte();
+            qDebug() << "InteractiveElements count : " << count;
+            for (qint8 a = 0; a < count; ++a)
+            {
+                qint64 m_id = r->readLong();
+                qDebug() << "IE id : " << m_id;
+                qint16 m_type = r->readShort();
+                qDebug() << "IE type : " << m_type;
+
+                QVector<qint32> m_views;
+                qint8 numView = r->readByte();
+                for (qint8 b = 0; b < numView; ++b)
+                    m_views.push_back(r->readInt());
+
+                qint16 dataSize = r->readShort();
+                for (qint16 b = 0; b < dataSize; ++b)
+                    r->readByte();
+
+                bool m_clientOnly = r->readByte(); // probably wrong, see readBooleanBit
+                qDebug() << "IE clientOnly : " << m_clientOnly;
+
+                qint16 m_landMarkType = r->readShort();
+                qDebug() << "IE landMarkType : " << m_landMarkType;
+            }
+
+            // loadDynamicElements
+            count = r->readByte();
+            qDebug() << "DynamicElements count : " << count;
+            for (qint8 a = 0; a < count; ++a)
+            {
+                qint8 m_de_x = r->readByte();
+                qint8 m_de_y = r->readByte();
+                qint16 m_de_z = r->readShort();
+
+                qint32 m_id = r->readInt();
+                qint32 m_gfxId = r->readInt();
+                qint16 m_type = r->readShort();
+                qint8 m_direction = r->readByte();
+            }
+        }
+
+    }
+    else if (ui->comboBox->currentText() == "tplg")
+    {
+        DialogTopology* dialogTopology = new DialogTopology(this);
+
+        TopologyReader* tplgThread = new TopologyReader(this);
+        connect(tplgThread, SIGNAL(resetProgressBar(int)), this, SLOT(resetProgressBar(int)));
+        connect(tplgThread, SIGNAL(updateProgressBar()), this, SLOT(updateProgressBar()));
+        connect(tplgThread, SIGNAL(updateTopology(QImage)), dialogTopology, SLOT(updateTopology(QImage)));
+        connect(tplgThread, SIGNAL(finished()), tplgThread, SLOT(deleteLater()));
+
+        tplgThread->setPath(path);
+        tplgThread->start();
     }
 }
 
