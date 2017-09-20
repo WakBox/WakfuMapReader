@@ -143,14 +143,78 @@ void MainWindow::openJarFile(QString path)
                     m_views.push_back(r->readInt());
 
                 qint16 dataSize = r->readShort();
-                for (qint16 b = 0; b < dataSize; ++b)
-                    r->readByte();
+                qDebug() << "===== DATA (" << dataSize << ") =====";
+
+                qint8 blockCount = r->readByte();
+                qDebug() << "block count : " << blockCount;
+
+                for (qint8 bc = 0; bc < blockCount; ++bc)
+                {
+                    r->readByte(); // index
+                    r->readInt();
+                }
+
+                for (qint8 bc = 0; bc < blockCount; ++bc)
+                {
+                    // index
+                    //  0 - this.getGlobalDataPart()
+                    //  1 - this.getSpecificDataPart()
+                    //  2 - this.getSynchronizationPart()
+                    //  3 - this.getSynchronizationSpecificPart()
+                    //  4 - this.getPersistancePart()
+                    //  5 - this.getAdditionalPersistancePart()
+                    qint8 idx = r->readByte();
+                    qDebug() << "INDEX : " << idx;
+
+                    if (idx == 0)
+                    {
+                        qint8 nActions = r->readByte();
+                        qDebug() << "nActions : " << nActions;
+                        for (qint8 na = 0; na < nActions; ++na)
+                        {
+                            qint16 actionId = r->readShort();
+                            qint32 scriptId = r->readInt();
+
+                            qDebug() << actionId << scriptId;
+                        }
+                    }
+                    else if (idx == 1)
+                    {
+                        qint16 m_world = r->readShort();
+                        qint32 m_position_x = r->readInt();
+
+                        qint32 m_position_y = r->readInt();
+                        qint16 m_position_z = r->readShort();
+                        qint16 m_state = r->readShort();
+                        bool is_visible = r->readByte();
+                        bool is_usable = r->readByte();
+                        qint8 direction = r->readByte();
+                        qint16 m_activationPattern = r->readShort();
+
+                        qint16 numberOfPositionTrigger = r->readShort();
+                        for (qint16 pt = 0; pt < numberOfPositionTrigger; ++pt)
+                        {
+                            r->readInt(); // x
+                            r->readInt(); // y
+                            r->readShort(); // z
+                        }
+
+                        qint16 len = r->readShort();
+
+                        qDebug() << "m_world :" << m_world;
+                        qDebug() << "m_position_x :" << m_position_x;
+                        qDebug() << "m_position_y :" << m_position_y;
+                        qDebug() << "m_state :" << m_state;
+                        qDebug() << r->readString(len);
+
+                        qint8 has_properties = r->readByte();
+                    }
+                }
+
+                qDebug() << "==============";
 
                 bool m_clientOnly = r->readByte(); // probably wrong, see readBooleanBit
-                qDebug() << "IE clientOnly : " << m_clientOnly;
-
                 qint16 m_landMarkType = r->readShort();
-                qDebug() << "IE landMarkType : " << m_landMarkType;
             }
 
             // loadDynamicElements
